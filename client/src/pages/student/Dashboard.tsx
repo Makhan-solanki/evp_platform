@@ -1,24 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  PlusIcon,
-  EyeIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  TrophyIcon,
-  UsersIcon,
-  DocumentTextIcon,
-  ChartBarIcon,
-  ArrowUpRightIcon,
-} from '@heroicons/react/24/outline';
-import { StudentLayout } from '@/components/layout/StudentLayout';
 
-import { Button } from '@/components/ui/Button';
+import { motion } from 'framer-motion';
+
 import { Image } from '@/components/ui/Image';
 import { useAuth } from '@/hooks';
-import { ROUTES } from '@/utils/constants';
-import { cn } from '@/utils';
+
 
 const StudentDashboard: React.FC = () => {
   const { student } = useAuth();

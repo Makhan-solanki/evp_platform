@@ -1,16 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import {
-  PlusIcon,
-  EyeIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  TrophyIcon,
-  UsersIcon,
-  DocumentTextIcon,
-  ChartBarIcon,
-  ArrowUpRightIcon,
-} from '@heroicons/react/24/outline';
+
 import { OrganizationLayout } from '@/components/layout/OrganizationLayout';
 import { Image } from '@/components/ui/Image';
 

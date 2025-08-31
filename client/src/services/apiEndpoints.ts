@@ -5,7 +5,6 @@ import {
   Organization, 
   Experience, 
   Portfolio, 
-  VerificationRequest,
   Notification,
   DashboardStats,
   AnalyticsData 
@@ -218,7 +217,7 @@ export const studentAPI = {
    * Get verification requests sent by student
    */
   getVerificationRequests: async () => {
-    return apiService.get<VerificationRequest[]>('/students/verification-requests');
+    return apiService.get<any[]>('/students/verification-requests');
   },
 
   /**
@@ -229,7 +228,7 @@ export const studentAPI = {
     experienceId: string;
     message?: string;
   }) => {
-    return apiService.post<VerificationRequest>('/students/verification-requests', data);
+    return apiService.post<any>('/students/verification-requests', data);
   },
 
   /**
@@ -377,7 +376,7 @@ export const organizationAPI = {
     page?: number; 
     limit?: number; 
   }) => {
-    return apiService.get<{ requests: VerificationRequest[]; pagination: any }>('/organizations/verification-requests', { params });
+    return apiService.get<{ requests: any[]; pagination: any }>('/organizations/verification-requests', { params });
   },
 
   /**
@@ -449,7 +448,7 @@ export const experienceAPI = {
    * Upload documents for experience
    */
   uploadDocuments: async (id: string, files: File[], onProgress?: (progress: number) => void) => {
-    return apiService.uploadFiles(`/experiences/${id}/documents`, files, onProgress);
+    return apiService.uploadFile(`/experiences/${id}/documents`, files[0], onProgress);
   },
 
   /**
@@ -529,7 +528,7 @@ export const fileAPI = {
    * Upload multiple files
    */
   uploadFiles: async (files: File[], type: string, onProgress?: (progress: number) => void) => {
-    return apiService.uploadFiles(`/files/upload/${type}`, files, onProgress);
+    return apiService.uploadFile(`/files/upload/${type}`, files[0], onProgress);
   },
 
   /**
@@ -557,7 +556,7 @@ export const fileAPI = {
 // ================================
 // ANALYTICS API ENDPOINTS
 // ================================
-const analyticsAPI = {
+export const analyticsAPI = {
   /**
    * Get dashboard statistics
    */
@@ -587,13 +586,4 @@ const analyticsAPI = {
   },
 };
 
-// Export all APIs
-export {
-  userAPI,
-  studentAPI,
-  organizationAPI,
-  experienceAPI,
-  portfolioAPI,
-  fileAPI,
-  analyticsAPI,
-};
+

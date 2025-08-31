@@ -214,7 +214,7 @@ const Analytics: React.FC = () => {
             <h2 className="text-xl font-bold text-white mb-6">Monthly Overview</h2>
             
             <div className="space-y-4">
-              {monthlyData.map((data, index) => (
+              {monthlyData.map((data, _index) => (
                 <div key={data.month} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <CalendarIcon className="h-5 w-5 text-gray-400" />

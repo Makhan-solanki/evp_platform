@@ -18,5 +18,5 @@ export function useClickOutside<T extends HTMLElement = HTMLElement>(
     };
   }, [callback]);
 
-  return ref;
+  return ref as React.RefObject<T>;
 }

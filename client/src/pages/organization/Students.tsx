@@ -4,13 +4,11 @@ import {
   MagnifyingGlassIcon,
   PlusIcon,
   UserIcon,
-  AcademicCapIcon,
-  CalendarIcon,
+
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
-  EllipsisVerticalIcon,
-  DocumentTextIcon,
+
   BriefcaseIcon,
   StarIcon,
   GlobeAltIcon,

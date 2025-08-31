@@ -26,7 +26,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
           onRoleSelect={handleRoleSelection}
           onClose={handleCloseRoleModal}
           userEmail={pendingFirebaseUser?.email || ''}
-          displayName={pendingFirebaseUser?.displayName || ''}
+          displayName={pendingFirebaseUser?.email || ''}
         />
       )}
     </>

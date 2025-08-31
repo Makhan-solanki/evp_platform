@@ -8,7 +8,7 @@ import {
   ShieldCheckIcon,
   BellIcon,
   MagnifyingGlassIcon,
-  UserCircleIcon,
+
   SunIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,

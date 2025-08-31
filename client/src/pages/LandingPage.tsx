@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,8 +9,7 @@ import {
   UserGroupIcon,
   ChartBarIcon,
   StarIcon,
-  CheckCircleIcon,
-  ArrowRightIcon
+
 } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/Button';
 import { ROUTES } from '@/utils/constants';
@@ -59,12 +59,7 @@ const LandingPage: React.FC = () => {
     },
   ];
 
-  const stats = [
-    { label: 'Students Verified', value: '10,000+' },
-    { label: 'Organizations', value: '500+' },
-    { label: 'Experiences Verified', value: '25,000+' },
-    { label: 'Success Rate', value: '95%' },
-  ];
+
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">

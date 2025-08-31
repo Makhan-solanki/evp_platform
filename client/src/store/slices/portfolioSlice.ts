@@ -172,7 +172,7 @@ const portfolioSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(publishPortfolio.fulfilled, (state, action) => {
+      .addCase(publishPortfolio.fulfilled, (state) => {
         state.isLoading = false;
         if (state.portfolio) {
           state.portfolio.isPublished = true;

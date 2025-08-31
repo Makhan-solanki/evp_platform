@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import compression from 'compression';
+import path from 'path';
 import { prisma } from './config/database';
 import { logger } from './config/logger';
 import {
@@ -98,6 +99,11 @@ app.use(express.urlencoded({
   extended: true, 
   limit: '10mb',
 }));
+
+// Serve static files from the React app build
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+}
 
 // Input sanitization
 app.use(sanitizeInput);
@@ -210,6 +216,13 @@ app.use((req, res, next) => {
   
   next();
 });
+
+// Catch-all handler for React app (must be before 404 handler)
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  });
+}
 
 // 404 handler - must be after all routes
 app.use(notFoundHandler);

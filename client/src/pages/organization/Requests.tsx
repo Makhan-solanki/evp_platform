@@ -9,7 +9,7 @@ import {
   CalendarIcon,
   EyeIcon,
   ChatBubbleLeftRightIcon,
-  ExclamationTriangleIcon,
+
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { OrganizationNavigation } from '@/components/layout/OrganizationNavigation';
@@ -157,7 +157,12 @@ const Requests: React.FC = () => {
       // Move to reviewed requests
       const approvedRequest = pendingRequests.find(req => req.id === requestId);
       if (approvedRequest) {
-        setReviewedRequests(prev => [...prev, { ...approvedRequest, status: 'approved', reviewedDate: new Date().toLocaleDateString() }]);
+        setReviewedRequests(prev => [...prev, { 
+          ...approvedRequest, 
+          status: 'approved', 
+          reviewedDate: new Date().toLocaleDateString(),
+          reviewerNotes: 'Request approved successfully.'
+        }]);
         setPendingRequests(prev => prev.filter(req => req.id !== requestId));
       }
       
@@ -187,7 +192,12 @@ const Requests: React.FC = () => {
       // Move to reviewed requests
       const rejectedRequest = pendingRequests.find(req => req.id === requestId);
       if (rejectedRequest) {
-        setReviewedRequests(prev => [...prev, { ...rejectedRequest, status: 'rejected', reviewedDate: new Date().toLocaleDateString() }]);
+        setReviewedRequests(prev => [...prev, { 
+          ...rejectedRequest, 
+          status: 'rejected', 
+          reviewedDate: new Date().toLocaleDateString(),
+          reviewerNotes: 'Request rejected.'
+        }]);
         setPendingRequests(prev => prev.filter(req => req.id !== requestId));
       }
       
@@ -305,7 +315,7 @@ const Requests: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {activeTab === 'pending' && request.priority && (
+                    {activeTab === 'pending' && 'priority' in request && request.priority && (
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(request.priority)}`}>
                         {request.priority.toUpperCase()}
                       </span>
@@ -360,7 +370,7 @@ const Requests: React.FC = () => {
                           <ClockIcon className="h-4 w-4" />
                           <span>Submitted: {request.submittedDate}</span>
                         </div>
-                        {request.reviewedDate && (
+                        {'reviewedDate' in request && request.reviewedDate && (
                           <div className="flex items-center gap-2 text-gray-400">
                             <CheckCircleIcon className="h-4 w-4" />
                             <span>Reviewed: {request.reviewedDate}</span>
@@ -369,11 +379,11 @@ const Requests: React.FC = () => {
                       </div>
                     </div>
 
-                    {request.documents && (
+                    {'documents' in request && request.documents && (
                       <div>
                         <h4 className="text-white font-medium mb-2">Documents</h4>
                         <div className="space-y-1">
-                          {request.documents.map((doc, docIndex) => (
+                          {request.documents.map((doc: string, docIndex: number) => (
                             <div key={docIndex} className="flex items-center gap-2 text-sm">
                               <DocumentTextIcon className="h-4 w-4 text-gray-400" />
                               <span className="text-blue-400 hover:text-blue-300 cursor-pointer">{doc}</span>
@@ -384,7 +394,7 @@ const Requests: React.FC = () => {
                       </div>
                     )}
 
-                    {request.reviewerNotes && (
+                    {'reviewerNotes' in request && request.reviewerNotes && (
                       <div>
                         <h4 className="text-white font-medium mb-2">Reviewer Notes</h4>
                         <p className="text-gray-300 text-sm bg-slate-700 p-3 rounded">{request.reviewerNotes}</p>

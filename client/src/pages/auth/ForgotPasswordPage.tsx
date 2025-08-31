@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { useAppDispatch } from '@/hooks';
 import { sendPasswordReset } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+
 import { forgotPasswordSchema, ForgotPasswordFormData } from '@/utils/validation';
 import { ROUTES } from '@/utils/constants';
 

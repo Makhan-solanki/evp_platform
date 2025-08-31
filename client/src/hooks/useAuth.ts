@@ -48,7 +48,7 @@ export const useAuth = () => {
   const isOrganization = user?.role === 'ORGANIZATION';
   const isAdmin = user?.role === 'ADMIN';
 
-  const handleRoleSelection = (role: 'STUDENT' | 'ORGANIZATION') => {
+  const handleRoleSelection = (_role: 'STUDENT' | 'ORGANIZATION') => {
     // Handle role selection logic
     setShowRoleModal(false);
   };

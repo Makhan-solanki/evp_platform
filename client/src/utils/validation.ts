@@ -100,7 +100,7 @@ export const experienceSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be less than 100 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters').max(2000, 'Description must be less than 2000 characters'),
   shortDescription: z.string().max(200, 'Short description must be less than 200 characters').optional(),
-  startDate: z.date({ required_error: 'Start date is required' }),
+  startDate: z.date({ message: 'Start date is required' }),
   endDate: z.date().optional(),
   isOngoing: z.boolean(),
   location: z.string().max(100, 'Location must be less than 100 characters').optional(),

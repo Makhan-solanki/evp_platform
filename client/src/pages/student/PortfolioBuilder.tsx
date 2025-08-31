@@ -4,9 +4,6 @@ import { useAppDispatch, useAppSelector } from '@/hooks';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import {
-  UserIcon,
-  AcademicCapIcon,
-  BriefcaseIcon,
   DocumentTextIcon,
   PlusIcon,
   TrashIcon,

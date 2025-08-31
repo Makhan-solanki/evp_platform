@@ -19,7 +19,7 @@ import {
   browserLocalPersistence,
   browserSessionPersistence
 } from 'firebase/auth';
-import { User, LoginCredentials, RegisterCredentials } from '@/types';
+import { LoginCredentials, RegisterCredentials } from '@/types';
 
 // Firebase configuration - Using a working demo configuration
 // For production, create your own Firebase project and use environment variables
@@ -373,7 +373,7 @@ class FirebaseService {
         throw new Error('No authenticated user found');
       }
 
-      const credential = await signInWithEmailAndPassword(auth, user.email, password);
+      await signInWithEmailAndPassword(auth, user.email, password);
       // The reauthentication is successful if we get here
     } catch (error: any) {
       console.error('Error re-authenticating:', error);

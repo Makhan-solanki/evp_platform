@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { useAppDispatch } from '@/hooks';
 import { loginUser } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+
 import { loginSchema, LoginFormData } from '@/utils/validation';
 import { ROUTES } from '@/utils/constants';
 
@@ -17,9 +17,9 @@ const LoginPage: React.FC = () => {
   
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
+
   
-  const from = location.state?.from?.pathname || '/';
+
 
   const {
     register,
