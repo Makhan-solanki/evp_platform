@@ -1,0 +1,191 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: experience-platform-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-experience_verification}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-experience_verification}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: experience-platform-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: ${NODE_ENV:-production}
+    container_name: experience-platform-backend
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3001}:5000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 5000
+      
+      # Database
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@postgres:5432/${DB_NAME:-experience_verification}?schema=public
+      
+      # Redis
+      REDIS_URL: redis://redis:6379
+      
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-make-it-long-and-complex-at-least-32-characters}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-jwt-key-make-it-different-and-long}
+      JWT_EXPIRE: ${JWT_EXPIRE:-15m}
+      
+      # Firebase Admin (Optional)
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
+      
+      # Email (Optional)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FROM_EMAIL: ${FROM_EMAIL:-noreply@yourapp.com}
+      FROM_NAME: ${FROM_NAME:-Experience Verification Platform}
+      
+      # Cloudinary (Optional)
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      
+      # App URLs
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+      API_URL: ${API_URL:-http://localhost:3001}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173,http://localhost:3001}
+      
+      # Security
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+      AUTH_RATE_LIMIT_MAX: ${AUTH_RATE_LIMIT_MAX:-5}
+      
+      # File Upload
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-10485760}
+      ALLOWED_FILE_TYPES: ${ALLOWED_FILE_TYPES:-image/jpeg,image/png,image/gif,image/webp,application/pdf}
+      UPLOAD_FOLDER: ${UPLOAD_FOLDER:-uploads}
+      
+      # Development
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      ENABLE_QUERY_LOGGING: ${ENABLE_QUERY_LOGGING:-false}
+      ENABLE_REQUEST_LOGGING: ${ENABLE_REQUEST_LOGGING:-false}
+      
+      # Feature Flags
+      ENABLE_EMAIL_VERIFICATION: ${ENABLE_EMAIL_VERIFICATION:-false}
+      ENABLE_TWO_FACTOR_AUTH: ${ENABLE_TWO_FACTOR_AUTH:-false}
+      ENABLE_SOCIAL_LOGIN: ${ENABLE_SOCIAL_LOGIN:-false}
+      ENABLE_FILE_VIRUS_SCAN: ${ENABLE_FILE_VIRUS_SCAN:-false}
+      ENABLE_REAL_TIME_NOTIFICATIONS: ${ENABLE_REAL_TIME_NOTIFICATIONS:-true}
+      
+    volumes:
+      - ./server/uploads:/app/uploads
+      - ./server/logs:/app/logs
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (React)
+  frontend:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-}
+        VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID:-}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3001/api}
+        VITE_APP_NAME: ${VITE_APP_NAME:-Experience Verification Platform}
+        VITE_APP_URL: ${VITE_APP_URL:-http://localhost:3000}
+    container_name: experience-platform-frontend
+    restart: unless-stopped
+    ports:
+      - "${CLIENT_PORT:-3000}:80"
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:stable-alpine
+    container_name: experience-platform-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+      - "${NGINX_SSL_PORT:-443}:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    networks:
+      - app-network
+    depends_on:
+      - frontend
+      - backend
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

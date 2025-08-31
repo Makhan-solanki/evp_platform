@@ -1,0 +1,524 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ORGANIZATION
+  STUDENT
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DRAFT
+}
+
+enum AchievementLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum ExperienceType {
+  INTERNSHIP
+  PROJECT
+  COMPETITION
+  COURSE
+  WORKSHOP
+  CERTIFICATION
+  VOLUNTEER
+  RESEARCH
+}
+
+enum DocumentType {
+  CERTIFICATE
+  TRANSCRIPT
+  PORTFOLIO
+  RECOMMENDATION
+  PROJECT_REPORT
+  OTHER
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  VERIFICATION
+  MESSAGE
+}
+
+model User {
+  id                String        @id @default(cuid())
+  firebaseUid       String?       @unique
+  password          String?
+  email             String        @unique
+  role              Role          @default(STUDENT)
+  verified          Boolean       @default(false)
+  isActive          Boolean       @default(true)
+  lastLogin         DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  emailVerificationToken String?
+  emailVerified     Boolean       @default(false)
+  twoFactorEnabled  Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relationships
+  organization      Organization?
+  student           Student?
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  
+  @@map("users")
+}
+
+model Organization {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique
+  description     String?
+  logo            String?
+  website         String?
+  address         String?
+  phone           String?
+  establishedYear Int?
+  industryType    String?
+  organizationType String?  // University, Company, Non-profit, etc.
+  verified        Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  settings        Json?     // Organization specific settings
+  socialLinks     Json?     // LinkedIn, Twitter, etc.
+  userId          String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relationships
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students        OrganizationStudent[]
+  experiences     Experience[]
+  invitations     StudentInvitation[]
+  verificationRequests VerificationRequest[]
+  
+  @@map("organizations")
+}
+
+model Student {
+  id              String    @id @default(cuid())
+  fullName        String
+  firstName       String?
+  lastName        String?
+  bio             String?
+  avatar          String?
+  portfolioSlug   String?   @unique
+  dateOfBirth     DateTime?
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  country         String?
+  postalCode      String?
+  linkedinUrl     String?
+  githubUrl       String?
+  portfolioUrl    String?
+  resumeUrl       String?
+  isPublic        Boolean   @default(false)
+  profileCompleted Boolean  @default(false)
+  preferences     Json?     // Notification preferences, privacy settings
+  metadata        Json?     // Additional student metadata
+  userId          String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relationships
+  user                User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizations       OrganizationStudent[]
+  experiences         Experience[]
+  portfolio           Portfolio?
+  skills             StudentSkill[]
+  socialLinks        SocialLink[]
+  documents          Document[]
+  invitations        StudentInvitation[]
+  verificationRequests VerificationRequest[]
+  achievementBadges   AchievementBadge[]
+  
+  @@map("students")
+}
+
+model OrganizationStudent {
+  id             String    @id @default(cuid())
+  organizationId String
+  studentId      String
+  joinedAt       DateTime  @default(now())
+  leftAt         DateTime?
+  isActive       Boolean   @default(true)
+  role           String?   // e.g., "Intern", "Volunteer", "Student", etc.
+  department     String?
+  program        String?
+  startDate      DateTime?
+  endDate        DateTime?
+  notes          String?
+  
+  // Relationships
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  student        Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@unique([organizationId, studentId])
+  @@map("organization_students")
+}
+
+model Experience {
+  id              String              @id @default(cuid())
+  title           String
+  description     String
+  shortDescription String?
+  startDate       DateTime
+  endDate         DateTime?
+  isOngoing       Boolean             @default(false)
+  location        String?
+  type            ExperienceType
+  level           AchievementLevel
+  skills          String[]            // Array of skill names
+  technologies    String[]            // Technologies used
+  responsibilities String[]           // Key responsibilities
+  achievements    String[]            // Key achievements
+  status          VerificationStatus  @default(PENDING)
+  verificationNote String?
+  rejectionReason String?
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  isHighlighted   Boolean             @default(false)
+  isPublic        Boolean             @default(true)
+  hoursDedicated  Int?
+  certificateUrl  String?
+  projectUrl      String?
+  githubUrl       String?
+  metadata        Json?               // Additional experience metadata
+  organizationId  String
+  studentId       String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  // Relationships
+  organization    Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  student         Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  documents       Document[]
+  portfolioItems  PortfolioExperience[]
+  
+  @@index([organizationId])
+  @@index([studentId])
+  @@index([status])
+  @@index([type])
+  @@map("experiences")
+}
+
+model Portfolio {
+  id          String    @id @default(cuid())
+  title       String
+  subtitle    String?
+  summary     String?
+  bio         String?
+  theme       String    @default("default")
+  customCss   String?
+  layout      Json?     // Layout configuration
+  sections    Json?     // Section order and visibility
+  isPublic    Boolean   @default(false)
+  isTemplate  Boolean   @default(false)
+  viewCount   Int       @default(0)
+  shareCount  Int       @default(0)
+  seoTitle    String?
+  seoDescription String?
+  seoKeywords String[]
+  customDomain String?  @unique
+  studentId   String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relationships
+  student     Student               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  portfolioSections PortfolioSection[]
+  experiences PortfolioExperience[]
+  analytics   PortfolioAnalytics[]
+  
+  @@map("portfolios")
+}
+
+model PortfolioSection {
+  id          String    @id @default(cuid())
+  title       String
+  content     String?
+  type        String    // "about", "education", "custom", etc.
+  order       Int
+  isVisible   Boolean   @default(true)
+  styling     Json?     // Custom styling for this section
+  portfolioId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relationships
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  
+  @@map("portfolio_sections")
+}
+
+model PortfolioExperience {
+  id           String     @id @default(cuid())
+  portfolioId  String
+  experienceId String
+  order        Int
+  isVisible    Boolean    @default(true)
+  description  String?    // Custom description override
+  styling      Json?      // Custom styling for this experience
+  
+  // Relationships
+  portfolio    Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  
+  @@unique([portfolioId, experienceId])
+  @@map("portfolio_experiences")
+}
+
+model StudentSkill {
+  id        String   @id @default(cuid())
+  name      String
+  level     Int      @default(1) // 1-5 skill level
+  category  String?  // "Programming", "Design", "Language", etc.
+  isVerified Boolean @default(false)
+  verifiedBy String?
+  yearsOfExperience Int?
+  studentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@unique([name, studentId])
+  @@map("student_skills")
+}
+
+model SocialLink {
+  id        String   @id @default(cuid())
+  platform  String   // "linkedin", "github", "twitter", "behance", etc.
+  url       String
+  username  String?
+  isVerified Boolean @default(false)
+  studentId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@map("social_links")
+}
+
+model Document {
+  id           String       @id @default(cuid())
+  filename     String
+  originalName String
+  fileUrl      String
+  fileType     String
+  fileSize     Int
+  mimeType     String
+  documentType DocumentType
+  isVerified   Boolean      @default(false)
+  isPublic     Boolean      @default(false)
+  uploadedBy   String       // User ID who uploaded
+  verifiedBy   String?      // User ID who verified
+  verifiedAt   DateTime?
+  expiresAt    DateTime?
+  downloadCount Int         @default(0)
+  metadata     Json?        // File metadata (OCR text, etc.)
+  studentId    String?
+  experienceId String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  
+  // Relationships
+  student      Student?     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  experience   Experience?  @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  
+  @@index([uploadedBy])
+  @@index([documentType])
+  @@map("documents")
+}
+
+model StudentInvitation {
+  id             String        @id @default(cuid())
+  email          String
+  message        String?
+  organizationId String
+  studentId      String?
+  token          String        @unique
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  declinedAt     DateTime?
+  reminderSentAt DateTime?
+  metadata       Json?         // Additional invitation data
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  
+  // Relationships
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  student        Student?      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@index([email])
+  @@index([token])
+  @@map("student_invitations")
+}
+
+model VerificationRequest {
+  id             String              @id @default(cuid())
+  type           String              // "organization_join", "experience_verify", "document_verify"
+  title          String
+  description    String?
+  status         VerificationStatus  @default(PENDING)
+  priority       Int                 @default(1) // 1-5 priority level
+  message        String?
+  responseNote   String?
+  attachments    String[]            // Array of file URLs
+  metadata       Json?               // Additional request data
+  studentId      String
+  organizationId String?
+  experienceId   String?
+  documentId     String?
+  assignedTo     String?             // User ID of assigned reviewer
+  processedAt    DateTime?
+  processedBy    String?             // User ID who processed
+  dueDate        DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  
+  // Relationships
+  student        Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  organization   Organization?       @relation(fields: [organizationId], references: [id])
+  
+  @@index([status])
+  @@index([type])
+  @@index([studentId])
+  @@map("verification_requests")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  category  String?          // "verification", "invitation", "experience", etc.
+  isRead    Boolean          @default(false)
+  actionUrl String?          // URL to navigate to when clicked
+  metadata  Json?            // Additional notification data
+  userId    String
+  createdAt DateTime         @default(now())
+  readAt    DateTime?
+  
+  // Relationships
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // "create", "update", "delete", "login", "verify", etc.
+  entity    String   // "user", "experience", "organization", etc.
+  entityId  String?
+  oldValues Json?    // Previous values (for updates)
+  newValues Json?    // New values
+  details   Json?    // Additional action details
+  userId    String
+  ipAddress String?
+  userAgent String?
+  sessionId String?
+  location  String?  // Geographic location
+  createdAt DateTime @default(now())
+  
+  // Relationships
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model AchievementBadge {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  color       String   @default("#3B82F6")
+  criteria    Json     // Criteria for earning this badge
+  isActive    Boolean  @default(true)
+  studentId   String
+  earnedAt    DateTime @default(now())
+  
+  // Relationships
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  @@map("achievement_badges")
+}
+
+model PortfolioAnalytics {
+  id          String   @id @default(cuid())
+  portfolioId String
+  date        DateTime @default(now())
+  views       Int      @default(0)
+  uniqueViews Int      @default(0)
+  shares      Int      @default(0)
+  downloads   Int      @default(0)
+  referrer    String?
+  country     String?
+  device      String?
+  browser     String?
+  
+  // Relationships
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  
+  @@unique([portfolioId, date])
+  @@map("portfolio_analytics")
+}
+
+model Settings {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  category    String?  // "email", "security", "features", etc.
+  isPublic    Boolean  @default(false)
+  dataType    String   @default("string") // "string", "number", "boolean", "json"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("settings")
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  subject     String
+  htmlContent String
+  textContent String?
+  variables   String[] // Available template variables
+  isActive    Boolean  @default(true)
+  category    String?  // "welcome", "invitation", "notification", etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("email_templates")
+}

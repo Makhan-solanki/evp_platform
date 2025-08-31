@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: experience-platform-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: experience_verification
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - app-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d experience_verification"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: experience-platform-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    networks:
+      - app-network-dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Development)
+  backend:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: experience-platform-backend-dev
+    restart: unless-stopped
+    ports:
+      - "3001:5000"
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      
+      # Database
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/experience_verification?schema=public
+      
+      # Redis
+      REDIS_URL: redis://redis:6379
+      
+      # JWT
+      JWT_SECRET: your-super-secret-jwt-key-make-it-long-and-complex-at-least-32-characters
+      JWT_REFRESH_SECRET: your-super-secret-refresh-jwt-key-make-it-different-and-long
+      JWT_EXPIRE: 15m
+      
+      # App URLs
+      CLIENT_URL: http://localhost:3000
+      API_URL: http://localhost:3001
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:3001
+      
+      # Development
+      LOG_LEVEL: debug
+      ENABLE_QUERY_LOGGING: true
+      ENABLE_REQUEST_LOGGING: true
+      
+      # Feature Flags
+      ENABLE_EMAIL_VERIFICATION: false
+      ENABLE_TWO_FACTOR_AUTH: false
+      ENABLE_SOCIAL_LOGIN: false
+      ENABLE_FILE_VIRUS_SCAN: false
+      ENABLE_REAL_TIME_NOTIFICATIONS: true
+      
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./server/uploads:/app/uploads
+      - ./server/logs:/app/logs
+    networks:
+      - app-network-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+
+  # Frontend (Development)
+  frontend:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: experience-platform-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_API_BASE_URL: http://localhost:3001/api
+      VITE_APP_NAME: Experience Verification Platform
+      VITE_APP_URL: http://localhost:3000
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    networks:
+      - app-network-dev
+    depends_on:
+      - backend
+    command: npm run dev
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  redis_data_dev:
+    driver: local
+
+networks:
+  app-network-dev:
+    driver: bridge
