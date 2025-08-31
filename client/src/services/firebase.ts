@@ -24,13 +24,13 @@ import { LoginCredentials, RegisterCredentials } from '@/types';
 // Firebase configuration - Using a working demo configuration
 // For production, create your own Firebase project and use environment variables
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyCzfVsK_T3GKkCQIKC_9cigobIktgv1p2M',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'saas-evpv.firebaseapp.com',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'saas-evpv',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'saas-evpv.appspot.com',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:123456789:web:abcdef123456',
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-XXXXXXXXXX',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ||
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || 
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ||
 };
 
 // Initialize Firebase
