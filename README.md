@@ -2,7 +2,6 @@
 
 A modern, full-stack web platform that enables educational organizations to verify student experiences and empowers students to build verified digital portfolios.
 
-![Platform Preview](https://via.placeholder.com/800x400/1e293b/ffffff?text=ExperienceHub+Platform)
 
 ## ✨ Features
 
